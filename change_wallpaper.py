@@ -17,7 +17,12 @@ Function -> parse last_weather.txt to confirm that there has been a change in we
 Args -> weather_type: weather type returned from OpenWeatherAPI
 Returns -> boolean: to determine if there has been a change in weather
 '''
-def check_old_weather(weather_type):
+def check_old_weather(weather_type, secondary_description):
+    # generalize the weather type
+    if weather_type in ['rain', 'drizzle']:
+        weather_type = 'rain'
+        if weather_type == 'drizzle' and secondary_description in ['heavy', 'shower']:
+            weather_type = 'thunderstorm'
     with open('last_weather.txt', 'r+') as fp:
         if fp.read() != weather_type:
             fp.seek(0)
@@ -60,7 +65,8 @@ def get_weather():
     if response.status_code == 200:
         data = response.json()
         weather_type = data['weather'][0]['main'].lower()
-        if check_old_weather(weather_type):
+        secondary_description = data['weather'][0]['description'].lower()
+        if check_old_weather(weather_type, secondary_description):
             change_wallpaper(weather_type)
         else:
             print('weather has not changed yet')
