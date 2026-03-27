@@ -1,5 +1,6 @@
 import requests
 import os 
+import json
 import subprocess
 from dotenv import load_dotenv
 
@@ -13,26 +14,17 @@ WALLPAPERS = os.getenv('WALLPAPER_PATH')
 
 
 '''
-Function -> parse last_weather.txt to confirm that there has been a change in weather
+Function -> categorizes the weather_type to better match the naming convention of the wallpapers
 Args -> weather_type: weather type returned from OpenWeatherAPI
-Returns -> boolean: to determine if there has been a change in weather
+Returns -> weather_type: weather type generalized by the function
 '''
-def check_old_weather(weather_type, secondary_description):
+def generalize_weather_type(weather_type, secondary_description):
     # generalize the weather type
     if weather_type in ['rain', 'drizzle']:
         weather_type = 'rain'
         if weather_type == 'drizzle' and secondary_description in ['heavy', 'shower']:
             weather_type = 'thunderstorm'
-    with open('last_weather.txt', 'r+') as fp:
-        if fp.read() != weather_type:
-            fp.seek(0)
-            fp.write(weather_type)
-            fp.truncate()
-            fp.close()
-            return True
-        fp.close()
-        return False
-
+    return weather_type
 
 '''
 Function -> run CLI command for WallPaperEngine tools to change the wallpaper on monitor 3
@@ -40,22 +32,32 @@ Args -> weather_type: new weather type used to determine which wallpaper to set
 Returns -> none
 '''
 def change_wallpaper(weather_type):
-    exe_path = os.getenv("EXE_PATH")
-    wallpapers_path = os.getenv("WALLPAPER_PATH")
-    wallpaper_file = wallpapers_path + fr"\{weather_type}\project.json"
+    wallpaper_file = WALLPAPERS + fr"\{weather_type}\project.json"
     command = [
-        exe_path,
+        APP_PATH,
         "-control", "openWallpaper",
         "-file", wallpaper_file,
         "-monitor", '2' # indexed starting at 0
     ]
     subprocess.run(command)
 
-'''
 
 '''
-def update_temps(temp, feels_like):
-    pass
+Function -> parses the scene.json file on the wallpaper and updates the asset that handles the temperature values
+Args -> temp: current temp in F, feels_like: current feels like temp in F, weather_type: current weather to get the correct wallpaper to update
+Returns -> none
+'''
+def update_temps(temp, feels_like, weather_type):
+    wallpaper_scene_file = WALLPAPERS + fr"\{weather_type}\scene.json"
+    with open(wallpaper_scene_file, "r", encoding="utf-8") as f:
+        scene = json.load(f)
+
+    for obj in scene.get("objects", []):
+        if obj.get("name") == "TempDisplay":
+            obj["text"]["value"] = f"{temp}°F  |  Feels like {feels_like}°F"
+
+    with open(wallpaper_scene_file, "w", encoding="utf-8") as f:
+        json.dump(scene, f, indent=2)
 
 
 '''
@@ -76,12 +78,11 @@ def get_weather():
         temp = int(data['main'].get('temp'))
         feels_like = int(data['main'].get('feels_like'))
         
+        weather_type = generalize_weather_type(weather_type, secondary_description)
         update_temps(temp, feels_like, weather_type)
-
-        if check_old_weather(weather_type, secondary_description):
-            change_wallpaper(weather_type)
-        else:
-            print('weather has not changed yet')
+        change_wallpaper(weather_type) # always change/reload the wallpaper to take temp updates in effect
+    else: 
+        print(f"Status code {response.status_code} received from API call")
 
 
 if __name__ == "__main__":
