@@ -1,0 +1,23 @@
+{
+    "anchor": "none",
+    "brightness": 2.0,
+    "backgroundbrightness": 1.0,
+    "backgroundcolor": "0.00000 0.00000 0.00000",
+    "castshadow": false,
+    "clampuvs": true,
+    "depthtest": "enabled",
+    "font": "fonts/workshop/2981960200/Quicksand-Bold.otf",
+    "horizontalalign": "center",
+    "id": 290,
+    "name": "TempDisplay",
+    "opaquebackground": false,
+    "origin": "1134.00000 2660.00000 0.00000",
+    "padding": 24,
+    "pointsize": 72.0,
+    "scale": "0.28038 0.28038 0.28038",
+    "size": "1200.00000 400.00000",
+    "text": {
+    "value": "30\u00b0F  |  Feels like 20\u00b0F"
+    },
+    "verticalalign": "center"
+}
