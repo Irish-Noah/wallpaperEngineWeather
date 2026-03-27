@@ -43,7 +43,6 @@ def change_wallpaper(weather_type):
     exe_path = os.getenv("EXE_PATH")
     wallpapers_path = os.getenv("WALLPAPER_PATH")
     wallpaper_file = wallpapers_path + fr"\{weather_type}\project.json"
-    print(wallpaper_file)
     command = [
         exe_path,
         "-control", "openWallpaper",
@@ -52,6 +51,12 @@ def change_wallpaper(weather_type):
     ]
     subprocess.run(command)
 
+'''
+
+'''
+def update_temps(temp, feels_like):
+    pass
+
 
 '''
 Function -> GET request to OpenWeatherAPI to get current weather in my area
@@ -59,13 +64,20 @@ Args -> none
 Returns -> none
 '''
 def get_weather(): 
-    url=f"https://api.openweathermap.org/data/2.5/weather?lat={LAT}&lon={LONG}&appid={API_KEY}"
+    url=f"https://api.openweathermap.org/data/2.5/weather?lat={LAT}&lon={LONG}&units=imperial&appid={API_KEY}"
     response = requests.get(url)
     
     if response.status_code == 200:
         data = response.json()
+        
         weather_type = data['weather'][0]['main'].lower()
         secondary_description = data['weather'][0]['description'].lower()
+        
+        temp = int(data['main'].get('temp'))
+        feels_like = int(data['main'].get('feels_like'))
+        
+        update_temps(temp, feels_like, weather_type)
+
         if check_old_weather(weather_type, secondary_description):
             change_wallpaper(weather_type)
         else:
